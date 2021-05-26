@@ -269,3 +269,5 @@ getUsersFromServerToMakeChips();
 createMainSection();
 createPostSection();
 createFeedSection();
+
+// just hard coding today more or less then i'll work on the fetches tomorrow
