@@ -46,7 +46,6 @@ rootEl.append(headerEl, mainEl);
 headerEl.append(wrapperEl);
 console.log("rootEl :", rootEl);
 
-// function that creates just one user chip - was hard coded now getting info from server
 function createUserChip(user) {
   const chipEl = document.createElement("div");
   chipEl.setAttribute("class", "chip");
@@ -67,14 +66,12 @@ function createUserChip(user) {
   wrapperEl.append(chipEl);
 }
 
-// function that makes all the user chips using info from the server
 function createUserChips(users) {
   for (const user of users) {
     createUserChip(user);
   }
 }
 
-// need a fetch request to read the users from the server to create chips in header
 function getUsersFromServerToMakeChips() {
   fetch("http://localhost:3000/users")
     .then(function (response) {
@@ -85,7 +82,6 @@ function getUsersFromServerToMakeChips() {
     });
 }
 
-// just making all elements for the main section
 function createMainSection() {
   const createPostEl = document.createElement("section");
   createPostEl.setAttribute("class", "create-post-section");
@@ -96,7 +92,6 @@ function createMainSection() {
   mainEl.append(createPostEl);
 }
 
-// just making all elements for the create post section
 function createPostSection() {
   const formEl = document.createElement("form");
   formEl.setAttribute("id", "create-post-form");
@@ -160,7 +155,7 @@ function createPostSection() {
   getCratePostSection.append(formEl);
 }
 
-function createFeedSection() {
+function createFeedSection(posts) {
   const feedEl = document.createElement("section");
   feedEl.setAttribute("class", "feed");
 
@@ -179,8 +174,6 @@ function createFeedSection() {
   const createSpanEl = document.createElement("span");
   createSpanEl.innerText = "Salvador Dali";
 
-  chipDivEl.append(avatarDivEl, createSpanEl);
-
   const createImgEl = document.createElement("img");
   createImgEl.setAttribute(
     "src",
@@ -188,14 +181,14 @@ function createFeedSection() {
   );
   createImgEl.setAttribute("alt", "Salvador Dali");
 
+  avatarDivEl.append(createImgEl);
+  chipDivEl.append(avatarDivEl, createSpanEl);
+
   const postImageDiv = document.createElement("div");
   postImageDiv.setAttribute("class", "post--image");
 
   const postImgEl = document.createElement("img");
-  postImgEl.setAttribute(
-    "src",
-    "https://images.unsplash.com/photo-1616745309504-0cb79e9ae590?ixid=MXwxMjA3fDB8MHx0b3BpYy1mZWVkfDI0fDZzTVZqVExTa2VRfHxlbnwwfHx8&amp;ixlib=rb-1.2.1&amp;auto=format&amp;fit=crop&amp;w=800&amp;q=60"
-  );
+  postImgEl.setAttribute("src", posts.image.src);
   postImgEl.setAttribute("alt", "undefined");
 
   postImageDiv.append(postImgEl);
@@ -204,11 +197,10 @@ function createFeedSection() {
   postContentDivEl.setAttribute("class", "post--content");
 
   const postContentH2El = document.createElement("h2");
-  postContentH2El.innerText = "A tree in blossom";
+  postContentH2El.innerText = posts.title;
 
   const postContentPtagEl = document.createElement("p");
-  postContentPtagEl.innerText =
-    "Spring is finally here... I just love the colours.";
+  postContentPtagEl.innerText = posts.content;
 
   postContentDivEl.append(postContentH2El, postContentPtagEl);
 
@@ -237,6 +229,7 @@ function createFeedSection() {
   commentPTagEl.innerText = "What a great photo!!";
 
   postCommentDivEl.append(commentAvatarSmallEL, commentPTagEl);
+  postCommentsDivEl.append(postCommentsH3El, postCommentDivEl);
 
   const commentFormEl = document.createElement("form");
   commentFormEl.setAttribute("is", "create-comment-form");
@@ -244,7 +237,7 @@ function createFeedSection() {
 
   const commentLabelEl = document.createElement("label");
   commentLabelEl.setAttribute("for", "comment");
-  commentLabelEl.innerText = "Add comment";
+  commentLabelEl.innerText = "Add comment ";
 
   const commentInputEl = document.createElement("input");
   commentInputEl.setAttribute("id", "comment");
@@ -257,17 +250,39 @@ function createFeedSection() {
 
   commentFormEl.append(commentLabelEl, commentInputEl, submitButtonEl);
 
-  liEl.append(chipDivEl, postImageDiv, postContentDivEl, commentFormEl);
+  liEl.append(
+    chipDivEl,
+    postImageDiv,
+    postContentDivEl,
+    commentFormEl,
+    postCommentsDivEl
+  );
   ulEl.append(liEl);
 
   feedEl.append(ulEl);
   mainEl.append(feedEl);
 }
 
+function createAllTheFeedSections(posts) {
+  for (const post of posts) {
+    createFeedSection(post);
+  }
+}
+
+function getPostsFromServer() {
+  fetch("http://localhost:3000/posts")
+    .then(function (response) {
+      return response.json();
+    })
+    .then(function (posts) {
+      createAllTheFeedSections(posts);
+    });
+}
+
 // calling functions that need to run
 getUsersFromServerToMakeChips();
 createMainSection();
 createPostSection();
-createFeedSection();
+getPostsFromServer();
 
 // just hard coding today more or less then i'll work on the fetches tomorrow
