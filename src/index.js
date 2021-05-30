@@ -1,39 +1,8 @@
-// Description
-// In this exercise we explore a multi-user experience most commonly found on social media apps like Instagram, where users
-// can see and interact with other users.
-
-// In the template folder you will find examples of the HTML that you can use as a reference to build the exercise, the classes are
-// connected to styles/index.css. Start at 1-root.html.
-
-// Ignore the preview feature in the example, we've replaced that feature with an adding likes feature instead (this is not shown in
-// any of the templates so you'll have to add the HTML and style it as you see fit).
-
-// Deliverables
-// - A user can select the user they want to post or comment as
-// - From the create a post section, a user can:
-//     - Enter a post's image URL
-//     - Enter a post's title
-//     - Enter a post's content
-//     - Create a post and view it in the feed
-// - From the feed section, a user can:
-//     - View a post and the owner of the post
-//     - View a posts' comments and the owner of the comments
-//     - Add a comment to a post
-//   - Add a like to a post
-
-// Instructions
-
-// - Create a fetch function to get data
-// - Create render functions to show data
-// - Use event listeners and fetch to create and update data on the server
-
-// Tips
-// - In this exercise focus on practicing Javascript and fetch requests, take your time.
-// - Keep track of the currentUser in a global variable so that you have access to their id in all your functions.
-// - Think about conditional rendering when creating the preview feature.
-
-// main chunk of code making all top level sections and appending
-// I know this probably should be in a function - i'll maybe try to do this later on
+let state = {
+  users: [],
+  posts: [],
+  comments: [],
+};
 
 const rootEl = document.querySelector("#root");
 const headerEl = document.createElement("header");
@@ -78,6 +47,7 @@ function getUsersFromServerToMakeChips() {
       return response.json();
     })
     .then(function (users) {
+      state.users = users;
       createUserChips(users);
     });
 }
@@ -96,6 +66,24 @@ function createPostSection() {
   const formEl = document.createElement("form");
   formEl.setAttribute("id", "create-post-form");
   formEl.setAttribute("autocomplete", "off");
+
+  formEl.addEventListener("submit", function (event) {
+    console.log("you hit post - good boy");
+    event.preventDefault();
+
+    fetch("http://localhost:3000/posts", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        image: { src: imageInputEl.value },
+        title: titleInputEl.value,
+        content: textAreaEl.value,
+      }),
+    });
+    formEl.reset();
+  });
 
   const h2El = document.createElement("h2");
   h2El.innerText = "Create a post";
@@ -151,11 +139,11 @@ function createPostSection() {
     actionButtons
   );
 
-  const getCratePostSection = document.querySelector(".create-post-section");
-  getCratePostSection.append(formEl);
+  const getCreatePostSection = document.querySelector(".create-post-section");
+  getCreatePostSection.append(formEl);
 }
 
-function createFeedSection(posts) {
+function createFeedSection(post) {
   const feedEl = document.createElement("section");
   feedEl.setAttribute("class", "feed");
 
@@ -171,36 +159,37 @@ function createFeedSection(posts) {
   const avatarDivEl = document.createElement("div");
   avatarDivEl.setAttribute("class", "avatar-small");
 
+  const foundUser = state.users.find(function (user) {
+    return user.id === post.userId;
+  });
+
   const createSpanEl = document.createElement("span");
-  createSpanEl.innerText = "Salvador Dali";
+  createSpanEl.innerText = foundUser.username;
+
+  const foundUserIcon = state.users.find(function (user) {
+    return user.id === post.userId;
+  });
 
   const createImgEl = document.createElement("img");
-  createImgEl.setAttribute(
-    "src",
-    "https://uploads5.wikiart.org/images/salvador-dali.jpg!Portrait.jpg"
-  );
-  createImgEl.setAttribute("alt", "Salvador Dali");
+  createImgEl.setAttribute("src", foundUserIcon.avatar);
 
-  avatarDivEl.append(createImgEl);
-  chipDivEl.append(avatarDivEl, createSpanEl);
+  createImgEl.setAttribute("alt", "Salvador Dali");
 
   const postImageDiv = document.createElement("div");
   postImageDiv.setAttribute("class", "post--image");
 
   const postImgEl = document.createElement("img");
-  postImgEl.setAttribute("src", posts.image.src);
-  postImgEl.setAttribute("alt", "undefined");
-
-  postImageDiv.append(postImgEl);
+  postImgEl.setAttribute("src", post.image.src);
+  postImgEl.setAttribute("alt", post.image.alt);
 
   const postContentDivEl = document.createElement("div");
   postContentDivEl.setAttribute("class", "post--content");
 
   const postContentH2El = document.createElement("h2");
-  postContentH2El.innerText = posts.title;
+  postContentH2El.innerText = post.title;
 
   const postContentPtagEl = document.createElement("p");
-  postContentPtagEl.innerText = posts.content;
+  postContentPtagEl.innerText = post.content;
 
   postContentDivEl.append(postContentH2El, postContentPtagEl);
 
@@ -223,13 +212,8 @@ function createFeedSection(posts) {
   );
   commentImageEl.setAttribute("alt", "Van Gogh");
 
-  commentAvatarSmallEL.append(commentImageEl);
-
   const commentPTagEl = document.createElement("p");
   commentPTagEl.innerText = "What a great photo!!";
-
-  postCommentDivEl.append(commentAvatarSmallEL, commentPTagEl);
-  postCommentsDivEl.append(postCommentsH3El, postCommentDivEl);
 
   const commentFormEl = document.createElement("form");
   commentFormEl.setAttribute("is", "create-comment-form");
@@ -248,7 +232,13 @@ function createFeedSection(posts) {
   submitButtonEl.setAttribute("type", "submit");
   submitButtonEl.innerText = "Comment";
 
+  avatarDivEl.append(createImgEl);
+  chipDivEl.append(avatarDivEl, createSpanEl);
+  postImageDiv.append(postImgEl);
+  commentAvatarSmallEL.append(commentImageEl);
   commentFormEl.append(commentLabelEl, commentInputEl, submitButtonEl);
+  postCommentDivEl.append(commentAvatarSmallEL, commentPTagEl);
+  postCommentsDivEl.append(postCommentsH3El, postCommentDivEl, commentFormEl);
 
   liEl.append(
     chipDivEl,
@@ -275,14 +265,28 @@ function getPostsFromServer() {
       return response.json();
     })
     .then(function (posts) {
+      state.posts = posts;
       createAllTheFeedSections(posts);
     });
 }
 
+function getCommentsFromServer() {
+  fetch("http://localhost:3000/comments")
+    .then(function (response) {
+      return response.json();
+    })
+    .then(function (comments) {
+      state.comments = comments;
+      //   createAllTheComments(comments);
+    });
+}
+
 // calling functions that need to run
+
 getUsersFromServerToMakeChips();
 createMainSection();
 createPostSection();
 getPostsFromServer();
+getCommentsFromServer();
 
 // just hard coding today more or less then i'll work on the fetches tomorrow
