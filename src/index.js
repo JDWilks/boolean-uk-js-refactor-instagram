@@ -1,3 +1,5 @@
+// i have an error on line 167 although it seems to work !
+
 let state = {
   users: [],
   posts: [],
@@ -18,6 +20,10 @@ console.log("rootEl :", rootEl);
 function createUserChip(user) {
   const chipEl = document.createElement("div");
   chipEl.setAttribute("class", "chip");
+
+  chipEl.addEventListener("click", function () {
+    chipEl.classList.toggle("active");
+  });
 
   const avatarSmallEl = document.createElement("div");
   avatarSmallEl.setAttribute("class", "avatar-small");
@@ -142,6 +148,9 @@ function createPostSection() {
   const getCreatePostSection = document.querySelector(".create-post-section");
   getCreatePostSection.append(formEl);
 }
+
+// probably need to extract the post section into another function to be able to pass the comments through in order to find the
+// userId.
 
 function createFeedSection(post) {
   const feedEl = document.createElement("section");
@@ -288,5 +297,3 @@ createMainSection();
 createPostSection();
 getPostsFromServer();
 getCommentsFromServer();
-
-// just hard coding today more or less then i'll work on the fetches tomorrow
